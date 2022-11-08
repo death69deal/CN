@@ -1,0 +1,651 @@
+1)Write a program to find the IP address of the system.
+ans-
+import socket
+print("Host Name:", socket.gethostname(), "\nIp 
+Address:", socket.gethostbyname(socket.gethostname()))
+
+2)Write a socket program for implementation of echo.
+ans-
+    client-
+import socket
+import sys
+client=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_address=('localhost',10000)
+client.connect(server_address)
+message=input()
+print("Sending:",message)
+client.sendall(message.encode())
+print("Original:",message)
+data=client.recv(1000).decode()
+print("ECHO",data)
+client.close()
+     server-
+import socket
+server=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_address=('localhost',10000)
+server.bind(server_address)
+server.listen(1)
+print("Waiting for connection!!!")
+connection,client_address=server.accept()
+print("Connection established",client_address)
+data=connection.recv(1000)
+print("Receiverd",data)
+connection.sendall(data)
+connection.close()
+server.close()
+
+3) Write a client-server application for chat using TCP.
+ans-
+  client-
+import socket 
+c=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_address=('localhost',10000)
+c.connect(server_address)
+print("Connecting to port",server_address)
+message=input()
+c.sendall(message.encode())
+while message!='end':
+    data=c.recv(1000).decode()
+    if data:
+        print(data)
+        message=input()
+        c.sendall(message.encode())
+    else:
+        break;
+c.close()
+    server-
+import socket 
+server=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_address=('localhost',10000)
+server.bind(server_address)
+server.listen(1)
+print("Waiting for connection")
+connection,c_address=server.accept()
+print("Connection established",c_address)
+message=""
+while message!='end':
+    data=connection.recv(1000).decode()
+    if data:
+        print(data)
+        message=input()
+        connection.sendall(message.encode())
+    else:
+        break;
+connection.close()
+server.close()
+
+4) Write a program using client server socket programming: Client needs to authenticate itself by entering a 
+server defined string as a password (like OTP) and then to say Hi to server. Server replies with a Hello. Press 
+any key to exit.
+ans-
+   client-
+import socket
+c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+c.connect(("127.0.0.1", 9090))
+data = c.recv(1024).decode()
+print(data, end=" ")
+otp = input()
+c.send(otp.encode())
+data = c.recv(1024).decode()
+print(data)
+if data == "You are Authenticated":
+ data = input("Enter Text: ")
+ c.send(data.encode())
+ data = c.recv(1024).decode()
+ print("Server:",data)
+else:
+ c.close()
+
+   server-
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(("127.0.0.1", 9090))
+s.listen()
+(c, cip) = s.accept()
+c.send("Enter OTP:".encode())
+otp = c.recv(1024).decode()
+if otp == '8894':
+ c.send("You are Authenticated".encode())
+ data = c.recv(1024).decode()
+ print("Client:",data)
+ data = input("Enter Text: ")
+ c.send(data.encode())
+else:
+ c.send("You are Authenticated".encode())
+s.close()
+
+
+5)Write a program to implement Remote Command Execution (RCE)
+ans-
+        server-
+import socket
+import os
+BUFFER_SIZE = 4096
+s = socket.socket()
+s.bind(('127.0.0.1', 5001))
+s.listen(1)
+print("Listening as 127.0.0.1:5001")
+client_socket, address = s.accept()
+print(f"{address[0]}:{str(address[1])} is Connected to terminal")
+while True:
+ print("\nClient@Server>>", end=" ")
+ command = client_socket.recv(BUFFER_SIZE).decode()
+ print(command)
+ if command == 'exit':
+     break
+ os.system(command)
+print("Closing remote connection with client")
+client_socket.close()
+s.close()
+      client- 
+import socket
+BUFFER_SIZE = 4096
+s = socket.socket()
+print("Connecting to 127.0.0.1:5001")
+s.connect(("127.0.0.1", 5001))
+print("Connected to Server Terminal")
+while True:
+ command = input("\nServer>> ")
+ s.sendall(command.encode())
+ if command == 'exit':
+     break
+print("Closing remote connection with Server")
+s.close()
+
+
+6)Write a program to Perform File Transfer in Client & Server Using TCP/IP.
+ans-
+   server-
+import socket
+server=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_address=('localhost',10000)
+server.bind(server_address)
+server.listen(1)
+connection,client_address=server.accept()
+file_name="sample.txt"
+connection.sendall(file_name.encode())
+file=open("sample.txt","rb")
+data=file.read()
+connection.sendall(data)
+file.close()
+connection.close()
+server.close()
+     client-
+import socket
+client=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_address=('localhost',10000)
+client.connect(server_address)
+file_name=client.recv(1000).decode()
+file_name="hello"+file_name
+file=open(file_name,"wb")
+data=client.recv(4097)
+file.write(data)
+file.close()
+client.close()
+
+7)Client-server using UDP
+ans-
+    client-
+import socket
+IP='127.0.0.1'
+port=20001
+buffersize=1024
+msgFromClient="client responded"
+bytesToSend=str.encode(msgFromClient)
+UDP_ClientSocket=socket.socket(family=socket.AF_INET,type=socket.SOCK_DGRAM)
+UDP_ClientSocket.sendto(bytesToSend, (IP,port))
+msgFromServer=UDP_ClientSocket.recvfrom(buffersize)
+msg="message from server {}".format(msgFromServer[0])
+print(msg)
+         server-
+import socket
+localIP='127.0.0.1'
+localport=20001
+buffersize=1024
+msgFromServer="server responded"
+bytesToSend=str.encode(msgFromServer)
+UDP_ServerSocket=socket.socket(family=socket.AF_INET,type=socket.SOCK_DGRAM)
+UDP_ServerSocket.bind((localIP,localport))
+print("UDP server up and listening")
+while True:
+    bytesAddresspair=UDP_ServerSocket.recvfrom(buffersize)
+    message=bytesAddresspair[0]
+    address=bytesAddresspair[1]
+    clientMsg="Message from clint: {}".format(message)
+    clientIP="clientIP Address: {}".format(address)
+    print(clientMsg)
+    print(clientIP)
+    UDP_ServerSocket.sendto(bytesToSend, address)
+
+8)Friend connection
+ans-
+    client-
+import socket
+import sys
+import time
+socket_server=socket.socket()
+server_host=socket.gethostname()
+ip=socket.gethostbyname(server_host)
+sport=8080
+server_host=input("Enter friends ip address")
+name=input("enter friends name")
+socket_server.connect((server_host,sport))
+socket_server.send(name.encode())
+server_name=socket_server.recv(1024)
+server_name=server_name.decode()
+print(server_name,'has joined......')
+while True:
+    message=(socket_server.recv(1024)).decode()
+    print(server_name,':',message)
+    message=input("me")
+    socket_server.send(message.encode())
+     
+     server-
+import socket
+import sys
+import time
+new_socket=socket.socket()
+host_name=socket.gethostname()
+s_ip=socket.gethostbyname(host_name)
+port=8080
+new_socket.bind((host_name,port))
+name=input("Enter name: ")
+new_socket.listen(1)
+conn,add=new_socket.accept()
+print("receved connection from",add[0])
+print("connection estabilished from",add[0])
+client=(conn.recv(1024)).decode()
+conn.send(name.encode())
+while True:
+    message=input("me")
+    conn.send(message.encode())
+    message=conn.recv(1024)
+    message=message.decode()
+    print(client,':',message)
+
+
+9)RMI
+ans-
+Server side code -> 
+
+
+import java.rmi.*;
+import java.rmi.server.*;
+public class remoServer extends UnicastRemoteObject implements remoInter
+{
+	public remoServer() throws Remote Exception
+	{
+		super();
+	}
+	public String message() throws Remote Exception
+	{
+		return "hello"
+	}
+
+  public static void main(String args[])
+  {
+	try
+	{
+		remoServer r = new remoServer();
+		Naming.rebind("TestServer", r);
+		System.out.println("The server is ready");
+	}
+	catch(Exception e)
+	{
+	}
+   }
+}
+
+
+Client side Code -> 
+
+import java.rmi.*;
+import java.rmi.registry.*;
+public class remoClint
+{
+	public static void main(String args[])
+      {
+		try
+		{
+			remonInter s =(remoInter)
+			Naming.lookop("TestServer");
+			System.out.println(s.message[]);
+		}
+		catch(Exception e)
+		{
+		}
+	}
+}
+
+
+
+10)Implement the data link layer framing methods such as character count ,character stuffing and bit stuffing.
+
+
+#include<stdio.h>
+#include<string.h>
+void main()
+{
+int a[20],b[30],i,j,k,count,n;
+printf("Enter frame length:");
+scanf("%d",&n);
+printf("Enter input frame (0's & 1's only):");
+for(i=0;i<n;i++)
+scanf("%d",&a[i]);
+i=0; count=1; j=0;
+while(i<n)
+{
+if(a[i]==1)
+{
+b[j]=a[i];
+for(k=i+1;a[k]==1 && k<n && count<5;k++)
+{
+j++;
+b[j]=a[k];
+count++;
+if(count==5)
+{
+j++;
+b[j]=0;
+}
+i=k;
+}}
+else
+{
+b[j]=a[i];
+}
+i++;
+j++;
+}
+printf("After stuffing the frame is:");
+for(i=0;i<j;i++)
+printf("%d",b[i]);
+}
+
+
+11)CRC
+ans-
+    client-
+import socket
+
+
+def xor(a, b):
+
+	
+	result = []
+
+
+	for i in range(1, len(b)):
+		if a[i] == b[i]:
+			result.append('0')
+		else:
+			result.append('1')
+
+	return ''.join(result)
+
+
+def mod2div(divident, divisor):
+	pick = len(divisor)
+
+	tmp = divident[0: pick]
+
+	while pick < len(divident):
+
+		if tmp[0] == '1':
+			tmp = xor(divisor, tmp) + divident[pick]
+
+		else: 
+			tmp = xor('0'*pick, tmp) + divident[pick]
+
+		pick += 1
+
+	if tmp[0] == '1':
+		tmp = xor(divisor, tmp)
+	else:
+		tmp = xor('0'*pick, tmp)
+
+	checkword = tmp
+	return checkword
+
+
+def decodeData(data, key):
+
+	l_key = len(key)
+
+	appended_data = data.decode() + '0'*(l_key-1)
+	remainder = mod2div(appended_data, key)
+
+	return remainder
+
+
+s = socket.socket()
+print("Socket successfully created")
+
+port = 12345
+
+s.bind(('', port))
+print("socket binded to %s" % (port))
+s.listen(5)
+print("socket is listening")
+
+
+while True:
+	c, addr = s.accept()
+	print('Got connection from', addr)
+
+	data = c.recv(1024)
+
+	print("Received encoded data in binary format :", data.decode())
+
+	if not data:
+		break
+
+	key = "1001"
+
+	ans = decodeData(data, key)
+	print("Remainder after decoding is->"+ans)
+
+	temp = "0" * (len(key) - 1)
+	if ans == temp:
+		c.sendto(("THANK you Data ->"+data.decode() +
+				" Received No error FOUND").encode(), ('127.0.0.1', 12345))
+	else:
+		c.sendto(("Error in data").encode(), ('127.0.0.1', 12345))
+
+	c.close() 
+
+         server-
+import socket		
+
+def xor(a, b):
+
+	
+	result = []
+
+	
+	for i in range(1, len(b)):
+		if a[i] == b[i]:
+			result.append('0')
+		else:
+			result.append('1')
+
+	return ''.join(result)
+
+
+
+def mod2div(divident, divisor):
+
+	
+	pick = len(divisor)
+
+	
+	tmp = divident[0 : pick]
+
+	while pick < len(divident):
+
+		if tmp[0] == '1':
+
+			
+			tmp = xor(divisor, tmp) + divident[pick]
+
+		else: 
+
+			
+			tmp = xor('0'*pick, tmp) + divident[pick]
+
+		
+		pick += 1
+
+
+	if tmp[0] == '1':
+		tmp = xor(divisor, tmp)
+	else:
+		tmp = xor('0'*pick, tmp)
+
+	checkword = tmp
+	return checkword
+
+
+def encodeData(data, key):
+
+	l_key = len(key)
+
+	
+	appended_data = data + '0'*(l_key-1)
+	remainder = mod2div(appended_data, key)
+
+	
+	codeword = data + remainder
+	return codeword
+	
+
+s = socket.socket()	
+
+
+port = 12345		
+
+
+s.connect(('127.0.0.1', port))
+
+
+
+input_string = input("Enter data you want to send->")
+
+data =(''.join(format(ord(x), 'b') for x in input_string))
+print("Entered data in binary format :",data)
+key = "1001"
+
+ans = encodeData(data,key)
+print("Encoded data to be sent to server in binary format :",ans)
+s.sendto(ans.encode(),('127.0.0.1', 12345))
+
+
+
+print("Received feedback from server :",s.recv(1024).decode())
+
+
+s.close()
+
+
+12)
+Implement on a data set of characters the three CRC polynomials – CRC 12, CRC 16 and CRC CCIP.
+
+
+#include<stdio.h>
+int gen[4],genl,frl,rem[4];
+void main()
+{
+int i,j,fr[8],dupfr[11],recfr[11],tlen,flag;
+frl=8; genl=4;
+printf("Enter frame:");
+for(i=0;i<frl;i++)
+{
+scanf("%d",&fr[i]);
+dupfr[i]=fr[i];
+}
+printf("Enter generator:");
+for(i=0;i<genl;i++)
+scanf("%d",&gen[i]);
+tlen=frl+genl-1;
+for(i=frl;i<tlen;i++)
+{
+dupfr[i]=0;
+}
+remainder(dupfr);
+for(i=0;i<frl;i++)
+{
+recfr[i]=fr[i];
+}
+for(i=frl,j=1;j<genl;i++,j++)
+{
+recfr[i]=rem[j];
+}
+remainder(recfr);
+flag=0;
+for(i=0;i<4;i++)
+{
+if(rem[i]!=0)
+flag++;
+}
+if(flag==0)
+{
+printf("frame received correctly");
+}
+else
+{
+printf("the received frame is wrong");
+}
+}
+remainder(int fr[])
+{
+int k,k1,i,j;
+for(k=0;k<frl;k++)
+{
+if(fr[k]==1)
+{
+k1=k;
+for(i=0,j=k;i<genl;i++,j++)
+{
+rem[i]=fr[j]^gen[i];
+}
+for(i=0;i<genl;i++)
+{
+fr[k1]=rem[i];
+k1++;
+}
+}
+}
+}
+
+
+13)DNS using UDP
+ans-
+   client-
+import socket
+hostname=socket.gethostname()
+ipaddr="127.0.0.1"
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+addr=(ipaddr,1234)
+c="Y"
+while c.upper()=="Y":
+    req_domai=input("Enter domani name for which the ip is needed:")
+    send=s.sendto(req_domain.encode(),addr)
+data,address=s.recvfrom(1024)
+reply_ip=data.decode().strip()
+print(f"The ip for the domain name{req_domain}:{reply_ip}")
+c=(input("Continue?(y/n)"))
+s.close()
+
+      server-
+import socket
+dns_table={"www.google.com":"192.165.1.1",
+                        "www.youtube.com":"192.168.1.2"}
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+print("Starting server")
+s.bind(("127.0.0.1",1234))
+while True:
+    data,address=s.recvfrom(1024)
+    print(f"{address}wants to fetch data!")
+    data=data.decode()
+    ip=dns_table.get(data,"Not Found!").encode()
+    send=s.sendto(ip,address)
